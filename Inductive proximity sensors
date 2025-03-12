@@ -1,0 +1,29 @@
+#include <Servo.h>
+
+Servo sorterServo;
+
+const int sensorPin = 2;  // Inductive proximity sensor connected to pin 2
+const int servoPin = 9;   // Servo motor connected to pin 9
+
+void setup() {
+    pinMode(sensorPin, INPUT);
+    sorterServo.attach(servoPin);
+    sorterServo.write(90);  // Default (neutral) position
+    Serial.begin(9600);
+}
+
+void loop() {
+    int metalDetected = digitalRead(sensorPin); // Read sensor input
+
+    if (metalDetected == HIGH) {  
+        Serial.println("Metal detected!");
+        sorterServo.write(0);  // Move servo to Metal Bin
+    } else {
+        Serial.println("Plastic or other non-metal detected!");
+        sorterServo.write(180); // Move servo to Non-Metal Bin
+    }
+
+    delay(1000); // Wait for sorting action
+    sorterServo.write(90); // Reset to neutral position
+    delay(500); // Small delay before next reading
+}
