@@ -1,15 +1,23 @@
 #include <Servo.h>  // Servo motor library
 
-// Pin Definitions
-#define RED_LED 5
-#define YELLOW_LED 6
+// Pin Definitions for Plastic Bin LED
+#define RED_LED_PLASTIC 5
+#define YELLOW_LED_PLASTIC 6
+
+// Pin Definitions for Metal Bin LED
+#define RED_LED_METAL 7
+#define YELLOW_LED_METAL 8
+
+// Sensor Pins
 #define PLASTIC_SENSOR A0
 #define METAL_SENSOR A1
 #define METAL_SENSOR_2 A2
 
-Servo servoPlastic; // Servo for plastic bin
-Servo servoMetal;   // Servo for metal bin
+// Servo Objects
+Servo servoPlastic; // Plastic bin servo
+Servo servoMetal;   // Metal bin servo
 
+// Default Servo Positions
 int posPlastic = 165;  // Default position for plastic bin servo
 int posMetal = 158;    // Default position for metal bin servo
 
@@ -19,8 +27,10 @@ void setup() {
     servoMetal.attach(12);    // Metal bin servo on pin 12
 
     // LED setup
-    pinMode(RED_LED, OUTPUT);
-    pinMode(YELLOW_LED, OUTPUT);
+    pinMode(RED_LED_PLASTIC, OUTPUT);
+    pinMode(YELLOW_LED_PLASTIC, OUTPUT);
+    pinMode(RED_LED_METAL, OUTPUT);
+    pinMode(YELLOW_LED_METAL, OUTPUT);
 
     // Sensor input pins
     pinMode(PLASTIC_SENSOR, INPUT_PULLUP);
@@ -30,8 +40,8 @@ void setup() {
     // Start Serial Monitor
     Serial.begin(9600);
 
-    // Set LED to default (off)
-    resetLED();
+    // Set LEDs to default (off)
+    resetLEDs();
 }
 
 void loop() {
@@ -46,24 +56,24 @@ void loop() {
     // Plastic bin logic
     if (plasticDetected == LOW && metalDetected == LOW) {
         moveServo(servoPlastic, posPlastic, 90);
-        indicateApproval();  // Yellow LED for approved object
+        indicateApprovalPlastic();  // Yellow LED for plastic bin
         delay(2500);
         moveServo(servoPlastic, 90, posPlastic);
-        resetLED();
+        resetLEDs();
     } 
 
     // Metal bin logic
     else if (metalDetected2 == HIGH) {
         moveServo(servoMetal, posMetal, 90);
-        indicateApproval();  // Yellow LED for approved object
+        indicateApprovalMetal();  // Yellow LED for metal bin
         delay(2500);
         moveServo(servoMetal, 90, posMetal);
-        resetLED();
+        resetLEDs();
     } 
 
     // If object is neither plastic nor metal
     else {
-        indicateRejection();  // Red LED for unapproved object
+        indicateRejection();  // Red LED for both bins
     }
 }
 
@@ -82,20 +92,27 @@ void moveServo(Servo &servo, int startPos, int endPos) {
     }
 }
 
-// Function to indicate approval with Yellow LED
-void indicateApproval() {
-    digitalWrite(RED_LED, LOW);
-    digitalWrite(YELLOW_LED, HIGH);
+// Functions to control LEDs
+void indicateApprovalPlastic() {
+    digitalWrite(RED_LED_PLASTIC, LOW);
+    digitalWrite(YELLOW_LED_PLASTIC, HIGH);
 }
 
-// Function to indicate rejection with Red LED
+void indicateApprovalMetal() {
+    digitalWrite(RED_LED_METAL, LOW);
+    digitalWrite(YELLOW_LED_METAL, HIGH);
+}
+
 void indicateRejection() {
-    digitalWrite(RED_LED, HIGH);
-    digitalWrite(YELLOW_LED, LOW);
+    digitalWrite(RED_LED_PLASTIC, HIGH);
+    digitalWrite(YELLOW_LED_PLASTIC, LOW);
+    digitalWrite(RED_LED_METAL, HIGH);
+    digitalWrite(YELLOW_LED_METAL, LOW);
 }
 
-// Function to reset LEDs (both off)
-void resetLED() {
-    digitalWrite(RED_LED, LOW);
-    digitalWrite(YELLOW_LED, LOW);
+void resetLEDs() {
+    digitalWrite(RED_LED_PLASTIC, LOW);
+    digitalWrite(YELLOW_LED_PLASTIC, LOW);
+    digitalWrite(RED_LED_METAL, LOW);
+    digitalWrite(YELLOW_LED_METAL, LOW);
 }
