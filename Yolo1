@@ -1,0 +1,53 @@
+import os
+import random
+import shutil
+
+# ----- SETTINGS -----
+source_folder = "dataset-resized"   # Path to your TrashNet folder
+project_folder = "trash_ai_project/dataset"  # Where YOLO dataset will be created
+train_ratio = 0.8  # 80% train, 20% val
+
+# YOLO folders
+images_train = os.path.join(project_folder, "images/train")
+images_val = os.path.join(project_folder, "images/val")
+labels_train = os.path.join(project_folder, "labels/train")
+labels_val = os.path.join(project_folder, "labels/val")
+
+# Classes from TrashNet folders
+classes = sorted([f for f in os.listdir(source_folder) if os.path.isdir(os.path.join(source_folder, f))])
+class_map = {cls: i for i, cls in enumerate(classes)}  # Map class name → index
+
+# Create YOLO folders
+for folder in [images_train, images_val, labels_train, labels_val]:
+    os.makedirs(folder, exist_ok=True)
+
+# ----- PROCESS EACH CLASS -----
+for cls in classes:
+    cls_path = os.path.join(source_folder, cls)
+    images = [f for f in os.listdir(cls_path) if f.lower().endswith(('.jpg','.png'))]
+    random.shuffle(images)
+
+    split_idx = int(len(images) * train_ratio)
+    train_imgs = images[:split_idx]
+    val_imgs = images[split_idx:]
+
+    for img_list, img_dest, label_dest in [(train_imgs, images_train, labels_train), (val_imgs, images_val, labels_val)]:
+        for img_file in img_list:
+            src_img = os.path.join(cls_path, img_file)
+            dst_img = os.path.join(img_dest, img_file)
+            shutil.copy(src_img, dst_img)
+
+            # Create label file (whole image as box: x_center=0.5, y_center=0.5, width=1, height=1)
+            label_file = os.path.join(label_dest, os.path.splitext(img_file)[0] + ".txt")
+            with open(label_file, "w") as f:
+                f.write(f"{class_map[cls]} 0.5 0.5 1 1\n")
+
+# ----- CREATE data.yaml -----
+data_yaml = os.path.join(project_folder, "data.yaml")
+with open(data_yaml, "w") as f:
+    f.write(f"train: {images_train}\n")
+    f.write(f"val: {images_val}\n")
+    f.write(f"nc: {len(classes)}\n")
+    f.write(f"names: {classes}\n")
+
+print("✅ YOLOv8 dataset created successfully!")
